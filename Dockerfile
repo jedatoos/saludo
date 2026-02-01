@@ -1,14 +1,23 @@
-# 1. Imagen base con Java
-FROM eclipse-temurin:17-jdk
+# ---------- ETAPA 1: COMPILAR ----------
+FROM eclipse-temurin:17-jdk AS build
 
-# 2. Carpeta de trabajo dentro del contenedor
 WORKDIR /app
 
-# 3. Copiar el jar generado por Maven
-COPY target/*.jar app.jar
+# Copiamos todo el proyecto
+COPY . .
 
-# 4. Exponer el puerto
+# Compilamos el proyecto (sin tests)
+RUN ./mvnw clean package -DskipTests
+
+
+# ---------- ETAPA 2: EJECUTAR ----------
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+# Copiamos SOLO el jar generado
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# 5. Ejecutar Spring Boot
 ENTRYPOINT ["java","-jar","app.jar"]
